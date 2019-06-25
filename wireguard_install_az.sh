@@ -128,7 +128,7 @@ EOF
 }
 show_qrcode(){
     echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
-    ls *.conf -ct | sed -e 's/\.conf$//'
+   ls -1 /etc/wireguard/*.conf | tr '\n' '\0' | xargs -0 -n 1 basename -s .conf
     echo -e "\033[37;41m输入要查看的客户端名字\033[0m"
     read -p "请输入客户端名：" nvqname
     content=$(cat /etc/wireguard/$nvqname.conf)
