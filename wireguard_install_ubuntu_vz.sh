@@ -142,7 +142,7 @@ sudo systemctl start $vname.service
     echo "${content}" | qrencode -o - -t UTF8
 
  cd "$mpath"
- rm -r /tmp/wginstall
+ sudo rm -rf  /tmp/wginstall
 }
 
 wireguard_remove(){
