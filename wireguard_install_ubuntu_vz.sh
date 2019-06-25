@@ -42,14 +42,14 @@ wireguard_install(){
         sudo apt-get install -y software-properties-common
     fi
     
-    suso apt-get install wget curl git libmnl-dev libelf-dev build-essential pkg-config
-    
+    sudo apt-get install wget curl git libmnl-dev libelf-dev build-essential pkg-config
+    apt autoremove golang
     sudo wget https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
     sudo tar xzfv go1.12.6.linux-amd64.tar.gz
     sudo cp -r ./go /usr/bin/
     sudo echo "export PATH=/usr/bin/go/bin:$PATH" >> /etc/profile
     sudo echo "export WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1" >> /etc/profile
-    sudo source /etc/profile
+    source /etc/profile
     
     sudo git clone https://git.zx2c4.com/wireguard-go
     sudo cd wireguard-go
