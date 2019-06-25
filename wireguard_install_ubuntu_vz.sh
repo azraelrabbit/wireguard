@@ -1,7 +1,27 @@
 #!/bin/bash
 
-vname=az
-vnetPrefix=10.168.11
+#vname=wg0
+vnetPrefix=10.168.12
+
+echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
+read -p "请输入服务端名字：(默认wg0)" vname
+
+if [ "$vname"=="" ]
+then 
+    vname=wg0
+fi
+
+
+    
+#echo -e "\033[37;41m设置虚拟内网地址前缀，前三段即可,例如:192.168.1 \033[0m"
+#read -p "请输虚拟内网前缀：(默认:10.168.12)" vnetPrefix
+
+#if [ "$vnetPrefix"=="" ]
+#then 
+#    vnetPrefix=10.168.12
+#fi
+echo -e "\033[37;41m 默认虚拟内网地址: $vnetPrefix \033[0m"
+
 
 rand(){
     min=$1
@@ -21,10 +41,29 @@ wireguard_install(){
         sudo apt-get update -y
         sudo apt-get install -y software-properties-common
     fi
-    sudo add-apt-repository -y ppa:wireguard/wireguard
-    sudo apt-get update -y
-    sudo apt-get install -y wireguard curl
-
+    
+    suso apt-get install wget curl git libmnl-dev libelf-dev build-essential pkg-config
+    
+    sudo wget https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
+    sudo tar xzfv go1.12.6.linux-amd64.tar.gz
+    sudo cp -r ./go /usr/bin/
+    sudo echo "export PATH=/usr/bin/go/bin:$PATH" >> /etc/profile
+    sudo echo "export WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1" >> /etc/profile
+    sudo source /etc/profile
+    
+    sudo git clone https://git.zx2c4.com/wireguard-go
+    sudo cd wireguard-go
+    make 
+    sudo cp wireguard-go /usr/sbin/
+    sudo cd ..
+    sudo git clone https://git.zx2c4.com/WireGuard
+    sudo cd WireGuard
+    sudo make & make install
+    sudo cd ..
+    sudo export WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1
+    sudo wireguard-go $vname
+    
+    
     sudo echo net.ipv4.ip_forward = 1 >> /etc/sysctl.conf
     sysctl -p
     echo "1"> /proc/sys/net/ipv4/ip_forward
@@ -39,7 +78,7 @@ wireguard_install(){
     c2=$(cat cpublickey)
     serverip=$(curl ipv4.icanhazip.com)
     port=$(rand 10000 60000)
-    eth=$(ls /sys/class/net | awk '/^e/{print}')
+    eth=$(ls /sys/class/net | awk '/^v/{print}')
 
 sudo cat > /etc/wireguard/$vname.conf <<-EOF
 [Interface]
@@ -50,7 +89,6 @@ PostDown = iptables -D FORWARD -i $vname -j ACCEPT; iptables -D FORWARD -o $vnam
 ListenPort = $port
 DNS = 8.8.8.8
 MTU = 1420
-
 [Peer]
 PublicKey = $c2
 AllowedIPs = $vnetPrefix.2/32
@@ -63,7 +101,6 @@ PrivateKey = $c1
 Address = $vnetPrefix.2/24 
 DNS = 8.8.8.8
 MTU = 1420
-
 [Peer]
 PublicKey = $s2
 Endpoint = $serverip:$port
@@ -72,6 +109,7 @@ PersistentKeepalive = 25
 EOF
 
     sudo apt-get install -y qrencode
+
 sudo cat > /etc/systemd/system/$vname.service <<-EOF
 [Unit]
 Description=wireguard $vname Service
@@ -92,7 +130,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable $vname.service
 sudo systemctl start $vname.service
-    
+   
     content=$(cat /etc/wireguard/client.conf)
     echo -e "\033[43;42m电脑端请下载/etc/wireguard/client.conf，手机端可直接使用软件扫码\033[0m"
     echo "${content}" | qrencode -o - -t UTF8
@@ -100,11 +138,12 @@ sudo systemctl start $vname.service
 
 wireguard_remove(){
 
-  sudo wg-quick down $vname
+    sudo wg-quick down $vname
     sudo systemctl stop $vname.service
     sudo systemctl disable $vname.service
     sudo rm -rf /etc/systemd/system/$vname.service
     sudo rm -rf /etc/wireguard
+
 }
 
 add_user(){
@@ -127,6 +166,7 @@ EOF
     echo -e "\033[37;41m添加完成，文件：/etc/wireguard/$newname.conf\033[0m"
     rm -f temprikey tempubkey
 }
+
 show_qrcode(){
     echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
     ls *.conf -ct | sed -e 's/\.conf$//'
@@ -135,6 +175,7 @@ show_qrcode(){
     content=$(cat /etc/wireguard/$nvqname.conf)
     echo "${content}" | qrencode -o - -t UTF8    
 }
+
 
 #开始菜单
 start_menu(){
@@ -159,9 +200,9 @@ start_menu(){
     wireguard_install
     ;;
     2)
-   # content=$(cat /etc/wireguard/client.conf)
-   # echo "${content}" | qrencode -o - -t UTF8
-   show_qrcode
+   #content=$(cat /etc/wireguard/client.conf)
+    #echo "${content}" | qrencode -o - -t UTF8
+    show_qrcode
     ;;
     3)
     wireguard_remove
@@ -182,9 +223,3 @@ start_menu(){
 }
 
 start_menu
-
-
-
-
-
-

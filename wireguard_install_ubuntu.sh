@@ -1,5 +1,27 @@
 #!/bin/bash
 
+#vname=wg0
+vnetPrefix=10.168.12
+
+echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
+read -p "请输入服务端名字：(默认wg0)" vname
+
+if [ "$vname"=="" ]
+then 
+    vname=wg0
+fi
+
+
+    
+#echo -e "\033[37;41m设置虚拟内网地址前缀，前三段即可,例如:192.168.1 \033[0m"
+#read -p "请输虚拟内网前缀：(默认:10.168.12)" vnetPrefix
+
+#if [ "$vnetPrefix"=="" ]
+#then 
+#    vnetPrefix=10.168.12
+#fi
+echo -e "\033[37;41m 默认虚拟内网地址: $vnetPrefix \033[0m"
+
 rand(){
     min=$1
     max=$(($2-$min+1))
@@ -38,26 +60,26 @@ wireguard_install(){
     port=$(rand 10000 60000)
     eth=$(ls /sys/class/net | awk '/^e/{print}')
 
-sudo cat > /etc/wireguard/wg0.conf <<-EOF
+sudo cat > /etc/wireguard/$vname.conf <<-EOF
 [Interface]
 PrivateKey = $s1
-Address = 10.0.0.1/24 
-PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o $eth -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $eth -j MASQUERADE
+Address = $vnetPrefix.1/24 
+PostUp   = iptables -A FORWARD -i $vname -j ACCEPT; iptables -A FORWARD -o $vname -j ACCEPT; iptables -t nat -A POSTROUTING -o $eth -j MASQUERADE
+PostDown = iptables -D FORWARD -i $vname -j ACCEPT; iptables -D FORWARD -o $vname -j ACCEPT; iptables -t nat -D POSTROUTING -o $eth -j MASQUERADE
 ListenPort = $port
 DNS = 8.8.8.8
 MTU = 1420
 
 [Peer]
 PublicKey = $c2
-AllowedIPs = 10.0.0.2/32
+AllowedIPs = $vnetPrefix.2/32
 EOF
 
 
 sudo cat > /etc/wireguard/client.conf <<-EOF
 [Interface]
 PrivateKey = $c1
-Address = 10.0.0.2/24 
+Address = $vnetPrefix.2/24 
 DNS = 8.8.8.8
 MTU = 1420
 
@@ -69,30 +91,26 @@ PersistentKeepalive = 25
 EOF
 
     sudo apt-get install -y qrencode
+sudo cat > /etc/systemd/system/$vname.service <<-EOF
+[Unit]
+Description=wireguard $vname Service
+After=network-online.target nss-lookup.target
+Wants=network-online.target nss-lookup.target
 
-sudo cat > /etc/init.d/wgstart <<-EOF
-#! /bin/bash
-### BEGIN INIT INFO
-# Provides:		wgstart
-# Required-Start:	$remote_fs $syslog
-# Required-Stop:    $remote_fs $syslog
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
-# Short-Description:	wgstart
-### END INIT INFO
-sudo wg-quick up wg0
+[Service]
+Type=simple
+Environment="WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1"
+ExecStart=/usr/bin/wg-quick up $vname
+ExecStop=/usr/bin/wg-quick down $vname
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-    sudo chmod +x /etc/init.d/wgstart
-    cd /etc/init.d
-    if [ $version == 14 ]
-    then
-        sudo update-rc.d wgstart defaults 90
-    else
-        sudo update-rc.d wgstart defaults
-    fi
-    
-    sudo wg-quick up wg0
+sudo systemctl daemon-reload
+sudo systemctl enable $vname.service
+sudo systemctl start $vname.service
     
     content=$(cat /etc/wireguard/client.conf)
     echo -e "\033[43;42m电脑端请下载/etc/wireguard/client.conf，手机端可直接使用软件扫码\033[0m"
@@ -101,10 +119,11 @@ EOF
 
 wireguard_remove(){
 
-    sudo wg-quick down wg0
-    sudo apt-get remove -y wireguard
+  sudo wg-quick down $vname
+    sudo systemctl stop $vname.service
+    sudo systemctl disable $vname.service
+    sudo rm -rf /etc/systemd/system/$vname.service
     sudo rm -rf /etc/wireguard
-
 }
 
 add_user(){
@@ -113,19 +132,27 @@ add_user(){
     cd /etc/wireguard/
     cp client.conf $newname.conf
     wg genkey | tee temprikey | wg pubkey > tempubkey
-    ipnum=$(grep Allowed /etc/wireguard/wg0.conf | tail -1 | awk -F '[ ./]' '{print $6}')
+    ipnum=$(grep Allowed /etc/wireguard/$vname.conf | tail -1 | awk -F '[ ./]' '{print $6}')
     newnum=$((10#${ipnum}+1))
     sed -i 's%^PrivateKey.*$%'"PrivateKey = $(cat temprikey)"'%' $newname.conf
-    sed -i 's%^Address.*$%'"Address = 10.0.0.$newnum\/24"'%' $newname.conf
+    sed -i 's%^Address.*$%'"Address = $vnetPrefix.$newnum\/24"'%' $newname.conf
 
-cat >> /etc/wireguard/wg0.conf <<-EOF
+cat >> /etc/wireguard/$vname.conf <<-EOF
 [Peer]
 PublicKey = $(cat tempubkey)
-AllowedIPs = 10.0.0.$newnum/32
+AllowedIPs = $vnetPrefix.$newnum/32
 EOF
-    wg set wg0 peer $(cat tempubkey) allowed-ips 10.0.0.$newnum/32
+    wg set $vname peer $(cat tempubkey) allowed-ips $vnetPrefix.$newnum/32
     echo -e "\033[37;41m添加完成，文件：/etc/wireguard/$newname.conf\033[0m"
     rm -f temprikey tempubkey
+}
+show_qrcode(){
+    echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
+    ls *.conf -ct | sed -e 's/\.conf$//'
+    echo -e "\033[37;41m输入要查看的客户端名字\033[0m"
+    read -p "请输入客户端名：" nvqname
+    content=$(cat /etc/wireguard/$nvqname.conf)
+    echo "${content}" | qrencode -o - -t UTF8    
 }
 
 #开始菜单
@@ -151,8 +178,9 @@ start_menu(){
     wireguard_install
     ;;
     2)
-    content=$(cat /etc/wireguard/client.conf)
-    echo "${content}" | qrencode -o - -t UTF8
+   # content=$(cat /etc/wireguard/client.conf)
+   # echo "${content}" | qrencode -o - -t UTF8
+   show_qrcode
     ;;
     3)
     wireguard_remove
