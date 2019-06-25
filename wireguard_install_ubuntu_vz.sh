@@ -1,5 +1,7 @@
 #!/bin/bash
 
+mpath="$PWD"
+
 #vname=wg0
 vnetPrefix=10.168.12
 
@@ -10,7 +12,6 @@ if [ "$vname"=="" ]
 then 
     vname=wg0
 fi
-
 
     
 #echo -e "\033[37;41m设置虚拟内网地址前缀，前三段即可,例如:192.168.1 \033[0m"
@@ -44,6 +45,10 @@ wireguard_install(){
     
     sudo apt-get install -y wget curl git libmnl-dev libelf-dev build-essential pkg-config
     apt autoremove golang
+
+   mkdir -p /tmp/wginstall
+  cd /tmp/wginstall
+
     sudo wget https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
     sudo tar xzfv go1.12.6.linux-amd64.tar.gz
     sudo cp -r ./go /usr/bin/
@@ -131,9 +136,13 @@ sudo systemctl daemon-reload
 sudo systemctl enable $vname.service
 sudo systemctl start $vname.service
    
+
     content=$(cat /etc/wireguard/client.conf)
     echo -e "\033[43;42m电脑端请下载/etc/wireguard/client.conf，手机端可直接使用软件扫码\033[0m"
     echo "${content}" | qrencode -o - -t UTF8
+
+ cd "$mpath"
+ rm -r /tmp/wginstall
 }
 
 wireguard_remove(){
