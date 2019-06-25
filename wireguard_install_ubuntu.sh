@@ -99,7 +99,6 @@ Wants=network-online.target nss-lookup.target
 
 [Service]
 Type=simple
-Environment="WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1"
 ExecStart=/usr/bin/wg-quick up $vname
 ExecStop=/usr/bin/wg-quick down $vname
 RemainAfterExit=yes
