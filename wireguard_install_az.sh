@@ -3,6 +3,9 @@
 vname=az
 vnetPrefix=10.168.11
 
+ echo -e "\033[37;41m 网卡名称: $vname \033[0m"
+echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
+
 rand(){
     min=$1
     max=$(($2-$min+1))
@@ -125,7 +128,11 @@ EOF
     wg set $vname peer $(cat tempubkey) allowed-ips $vnetPrefix.$newnum/32
     echo -e "\033[37;41m添加完成，文件：/etc/wireguard/$newname.conf\033[0m"
     rm -f temprikey tempubkey
+
+    content=$(cat /etc/wireguard/$newname.conf)
+    echo "${content}" | qrencode -o - -t UTF8
 }
+
 show_qrcode(){
     echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
    ls -1 /etc/wireguard/*.conf | tr '\n' '\0' | xargs -0 -n 1 basename -s .conf

@@ -21,7 +21,8 @@ fi
 #then 
 #    vnetPrefix=10.168.12
 #fi
-echo -e "\033[37;41m 默认虚拟内网地址: $vnetPrefix \033[0m"
+ echo -e "\033[37;41m 网卡名称: $vname \033[0m"
+echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
 
 
 rand(){
