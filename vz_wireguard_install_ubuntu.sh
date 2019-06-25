@@ -21,10 +21,8 @@ fi
 #then 
 #    vnetPrefix=10.168.12
 #fi
- echo -e "\033[37;41m 网卡名称: $vname \033[0m"
-echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
-
-
+ 
+ 
 rand(){
     min=$1
     max=$(($2-$min+1))
@@ -198,7 +196,7 @@ start_menu(){
     echo -e "\033[43;42m 介绍：wireguard一键脚本              \033[0m"
     echo -e "\033[43;42m 系统：Ubuntu                        \033[0m"
      echo -e "\033[37;41m 网卡名称:  $vname \033[0m"
-    echo -e "\033[37;41m 虚拟内网地址:  $vnetPrefix \033[0m"
+    echo -e "\033[37;41m 虚拟内网地址:  $vnetPrefix.x/24 \033[0m"
     echo -e "\033[43;42m ====================================\033[0m"
     echo
     echo -e "\033[0;33m 1. 安装wireguard\033[0m"
