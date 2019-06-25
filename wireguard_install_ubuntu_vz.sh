@@ -174,6 +174,8 @@ EOF
     wg set $vname peer $(cat tempubkey) allowed-ips $vnetPrefix.$newnum/32
     echo -e "\033[37;41m添加完成，文件：/etc/wireguard/$newname.conf\033[0m"
     rm -f temprikey tempubkey
+
+start_menu()
 }
 
 show_qrcode(){
@@ -183,6 +185,8 @@ show_qrcode(){
     read -p "请输入客户端名：" nvqname
     content=$(cat /etc/wireguard/$nvqname.conf)
     echo "${content}" | qrencode -o - -t UTF8    
+
+start_menu()
 }
 
 
@@ -209,10 +213,8 @@ start_menu(){
     wireguard_install
     ;;
     2)
-   #content=$(cat /etc/wireguard/client.conf)
-    #echo "${content}" | qrencode -o - -t UTF8
     show_qrcode
-    ;;
+     ;;
     3)
     wireguard_remove
     ;;
