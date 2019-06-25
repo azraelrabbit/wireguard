@@ -21,7 +21,8 @@ fi
 #then 
 #    vnetPrefix=10.168.12
 #fi
-echo -e "\033[37;41m 默认虚拟内网地址: $vnetPrefix \033[0m"
+ echo -e "\033[37;41m 网卡名称: $vname \033[0m"
+echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
 
 
 rand(){
@@ -105,7 +106,7 @@ sudo cat > /etc/wireguard/client.conf <<-EOF
 PrivateKey = $c1
 Address = $vnetPrefix.2/24 
 DNS = 8.8.8.8
-MTU = 1420
+MTU = 1320
 [Peer]
 PublicKey = $s2
 Endpoint = $serverip:$port

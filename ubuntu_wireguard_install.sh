@@ -1,26 +1,10 @@
 #!/bin/bash
 
-#vname=wg0
-vnetPrefix=10.168.12
+vname=wg0
+vnetPrefix=10.168.17
 
-echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
-read -p "请输入服务端名字：(默认wg0)" vname
-
-if [ "$vname"=="" ]
-then 
-    vname=wg0
-fi
-
-
-    
-#echo -e "\033[37;41m设置虚拟内网地址前缀，前三段即可,例如:192.168.1 \033[0m"
-#read -p "请输虚拟内网前缀：(默认:10.168.12)" vnetPrefix
-
-#if [ "$vnetPrefix"=="" ]
-#then 
-#    vnetPrefix=10.168.12
-#fi
-echo -e "\033[37;41m 默认虚拟内网地址: $vnetPrefix \033[0m"
+ echo -e "\033[37;41m 网卡名称: $vname \033[0m"
+echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
 
 rand(){
     min=$1
@@ -81,7 +65,7 @@ sudo cat > /etc/wireguard/client.conf <<-EOF
 PrivateKey = $c1
 Address = $vnetPrefix.2/24 
 DNS = 8.8.8.8
-MTU = 1420
+MTU = 1320
 
 [Peer]
 PublicKey = $s2
@@ -144,6 +128,9 @@ EOF
     wg set $vname peer $(cat tempubkey) allowed-ips $vnetPrefix.$newnum/32
     echo -e "\033[37;41m添加完成，文件：/etc/wireguard/$newname.conf\033[0m"
     rm -f temprikey tempubkey
+
+    content=$(cat /etc/wireguard/$newname.conf)
+    echo "${content}" | qrencode -o - -t UTF8
 }
 show_qrcode(){
     echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
