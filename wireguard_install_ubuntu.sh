@@ -120,6 +120,19 @@ wireguard_remove(){
 }
 
 add_user(){
+
+addrprefix=$(grep Address /etc/wireguard/client.conf | tail -1 | awk -F '[ /]' '{print $3}' | awk -F '.' '{print $1"."$2"."$3}')
+
+if test -z "$addrprefix"
+then
+     # echo "addrprefix is null"
+        echo "addrprefix is $vnetPrefix"
+else
+       # echo "addrprefix is setup"
+        vnetPrefix=$addrprefix
+       echo "addrprefix is $vnetPrefix"
+fi
+
     echo -e "\033[37;41m给新用户起个名字，不能和已有用户重复\033[0m"
     read -p "请输入用户名：" newname
     cd /etc/wireguard/

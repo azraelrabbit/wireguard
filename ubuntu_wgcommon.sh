@@ -1,8 +1,18 @@
 #!/bin/bash
 
-vname=az
-vnetPrefix=10.168.11
+vname=wg0
+vnetPrefix=10.0.1
 
+#echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
+# read -p "请输入服务端名字：(默认wg0)" vname
+
+#if [ "$vname"=="" ]
+#then 
+    vname=wg0
+#fi
+
+
+    
  echo -e "\033[37;41m 网卡名称: $vname \033[0m"
 echo -e "\033[37;41m  虚拟内网地址: $vnetPrefix \033[0m"
 
@@ -145,10 +155,9 @@ EOF
     content=$(cat /etc/wireguard/$newname.conf)
     echo "${content}" | qrencode -o - -t UTF8
 }
-
 show_qrcode(){
     echo -e "\033[37;41m客户端列表(包括服务端名字,忽略其即可)\033[0m"    
-   ls -1 /etc/wireguard/*.conf | tr '\n' '\0' | xargs -0 -n 1 basename -s .conf
+    ls -1 /etc/wireguard/*.conf | tr '\n' '\0' | xargs -0 -n 1 basename -s .conf
     echo -e "\033[37;41m输入要查看的客户端名字\033[0m"
     read -p "请输入客户端名：" nvqname
     content=$(cat /etc/wireguard/$nvqname.conf)
