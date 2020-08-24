@@ -47,6 +47,7 @@ wireguard_install(){
     fi
     
     sudo apt-get install -y wget curl git libmnl-dev libelf-dev build-essential pkg-config
+     sudo  apt-get -y install wireguard-tools --no-install-recommends
     apt autoremove golang
 
    mkdir -p /tmp/wginstall
