@@ -2,14 +2,17 @@
 
 mpath="$PWD"
 
+vnull=""
+
 vname=wg0
 vnetPrefix=10.168.12
 
 echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
 read -p "请输入服务端名字：(默认wg0)" vname
 
-if [ "$vname"=="" ]
-then 
+#if ["$vname"==$vnull]
+#then 
+if  [ ! -n "$vname" ] ;then
     vname=wg0
 fi
 
@@ -49,9 +52,14 @@ wireguard_install(){
    mkdir -p /tmp/wginstall
   cd /tmp/wginstall
 
-    sudo wget https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
-    sudo tar xzfv go1.12.6.linux-amd64.tar.gz
-    sudo cp -r ./go /usr/bin/
+ #    sudo wget https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz
+  #  sudo tar xzfv go1.12.6.linux-amd64.tar.gz
+  #  sudo cp -r ./go /usr/bin/
+
+   sudo add-apt-repository ppa:longsleep/golang-backports -y
+					sudo apt-get update
+					sudo apt-get install -y golang-go
+
     sudo echo "export PATH=/usr/bin/go/bin:$PATH" >> /etc/profile
     sudo echo "export WG_I_PREFER_BUGGY_USERSPACE_TO_POLISHED_KMOD=1" >> /etc/profile
     source /etc/profile
