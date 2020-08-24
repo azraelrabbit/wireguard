@@ -2,7 +2,7 @@
 
 mpath="$PWD"
 
-#vname=wg0
+vname=wg0
 vnetPrefix=10.168.12
 
 echo -e "\033[37;41m给服务端起个名字(或要管理的服务端)，只能使用英文字符和数字,且不能以数字开头\033[0m"
@@ -13,6 +13,7 @@ then
     vname=wg0
 fi
 
+echo $vname
     
 #echo -e "\033[37;41m设置虚拟内网地址前缀，前三段即可,例如:192.168.1 \033[0m"
 #read -p "请输虚拟内网前缀：(默认:10.168.12)" vnetPrefix
@@ -32,7 +33,7 @@ rand(){
 
 wireguard_install(){
     version=$(cat /etc/os-release | awk -F '[".]' '$1=="VERSION="{print $2}')
-    if [ $version == 18 ]
+    if [ $version == 18 -o $version == 20 ]
     then
         sudo apt-get update -y
         sudo apt-get install -y software-properties-common
